@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>틀린 그림 찾기</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <section class="screen active" id="startScreen" aria-label="게임 시작 화면">
+      <div class="screen-panel">
+        <p class="eyebrow">Stage Game</p>
+        <h1 class="screen-title">틀린 그림 찾기</h1>
+        <p class="screen-text">1단계부터 3단계까지, 시간 안에 모든 차이를 찾아보세요.</p>
+        <button class="screen-action" id="startButton" type="button">시작하기</button>
+      </div>
+    </section>
+
+    <section class="screen" id="endScreen" aria-label="게임 종료 화면" aria-hidden="true">
+      <div class="screen-panel">
+        <p class="eyebrow">Complete</p>
+        <h1 class="screen-title" id="endTitle">축하합니다</h1>
+        <p class="screen-text" id="endText">모든 단계를 완료했습니다.</p>
+        <button class="screen-action" id="playAgainButton" type="button">다시 하기</button>
+      </div>
+    </section>
+
+    <div class="game" id="gameArea" hidden>
+      <header class="header">
+        <div>
+          <p class="eyebrow">Difference Picture Game</p>
+          <h1 class="title">틀린 그림 찾기</h1>
+          <p class="subtitle" id="stageSubtitle">같은 듯 다른 두 그림을 비교해 차이를 찾아보세요.</p>
+        </div>
+        <div class="header-actions">
+          <button class="ghost-button" id="showAnswerButton" type="button">정답보기</button>
+          <button class="ghost-button" id="changePictureButton" type="button">그림 바꾸기</button>
+          <button class="ghost-button" id="restartButton" type="button">다시 시작</button>
+        </div>
+      </header>
+
+      <section class="status-bar" aria-label="게임 정보">
+        <div class="status-card">
+          <span class="status-label">단계</span>
+          <strong class="status-value" id="stageCount">1 / 3</strong>
+        </div>
+        <div class="status-card">
+          <span class="status-label">찾은 차이</span>
+          <strong class="status-value" id="foundCount">0 / 4</strong>
+        </div>
+        <div class="status-card">
+          <span class="status-label">남은 시간</span>
+          <strong class="status-value"><span id="timeCount">0</span>초</strong>
+        </div>
+      </section>
+
+      <section class="board" aria-label="틀린 그림 비교 영역">
+        <article class="picture-card">
+          <div class="picture-header">
+            <span class="picture-label">왼쪽 그림</span>
+            <span class="picture-hint">원본</span>
+          </div>
+          <div class="scene-frame" id="leftScene" data-side="left"></div>
+        </article>
+
+        <article class="picture-card">
+          <div class="picture-header">
+            <span class="picture-label">오른쪽 그림</span>
+            <span class="picture-hint">비교</span>
+          </div>
+          <div class="scene-frame" id="rightScene" data-side="right"></div>
+        </article>
+      </section>
+
+      <p class="message" id="message">시작 버튼을 눌러 게임을 시작하세요.</p>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
