@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="YouTube style favicon">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ff4b4b" />
+      <stop offset="100%" stop-color="#d50000" />
+    </linearGradient>
+  </defs>
+  <rect x="6" y="14" width="52" height="36" rx="10" fill="url(#g)" />
+  <path d="M28 24.5L42 32 28 39.5z" fill="#fff" />
+</svg>
