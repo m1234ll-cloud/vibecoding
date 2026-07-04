@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>유튜브 학습 기록 앱</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <div>
+        <h1 class="title">유튜브 학습 기록</h1>
+        <p class="subtitle">시청한 영상 URL을 저장하고, 완료 상태를 관리하세요.</p>
+      </div>
+      <div class="stats" aria-label="요약 정보">
+        <div class="stat">
+          <span class="stat-label">전체</span>
+          <strong id="totalCount">0</strong>
+        </div>
+        <div class="stat">
+          <span class="stat-label">완료</span>
+          <strong id="doneCount">0</strong>
+        </div>
+      </div>
+    </header>
+
+    <section class="panel" aria-label="URL 추가">
+      <form id="entryForm" class="entry-form">
+        <label class="field">
+          <span class="field-label">유튜브 URL</span>
+          <div class="input-shell">
+            <input id="urlInput" type="url" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off" />
+            <button class="clear-input-button" id="clearInputButton" type="button" aria-label="입력 내용 지우기">x</button>
+          </div>
+        </label>
+        <button class="primary-button" type="submit">저장</button>
+      </form>
+      <p class="hint" id="formHint">유튜브 영상 URL만 저장할 수 있습니다.</p>
+    </section>
+
+    <section class="list-section" aria-label="저장된 목록">
+      <div class="list-header">
+        <h2 class="section-title">저장 목록</h2>
+        <button class="ghost-button" id="clearAllButton" type="button">전체 삭제</button>
+      </div>
+      <ul class="list" id="videoList"></ul>
+      <p class="empty-state" id="emptyState">저장된 영상이 없습니다.</p>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

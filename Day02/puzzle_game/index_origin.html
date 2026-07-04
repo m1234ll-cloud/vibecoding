@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>간단한 퍼즐 게임</title>
+  <style>
+    :root {
+      --bg: #f4f5f8;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --accent: #2f6fed;
+      --accent-dark: #2459c8;
+      --tile: #bff3cf;
+      --tile-border: #a7e6bb;
+      --tile-shadow: 0 6px 14px rgba(16, 185, 129, 0.08);
+      --matched: #ffffff;
+      --matched-bg: #dff8e7;
+      --shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #f7f8fb 0%, #eef1f6 100%);
+      color: var(--text);
+    }
+
+    .app {
+      width: 100%;
+      max-width: 430px;
+      background: var(--card);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 22px 18px 18px;
+    }
+
+    .title {
+      margin: 6px 0 6px;
+      text-align: center;
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .subtitle {
+      margin: 0 0 18px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .counter {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1f2937;
+    }
+
+    .restart {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(47, 111, 237, 0.25);
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .restart:hover {
+      background: var(--accent-dark);
+      transform: translateY(-1px);
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 9px;
+    }
+
+    .tile {
+      aspect-ratio: 1 / 1;
+      border: 1px solid var(--tile-border);
+      border-radius: 16px;
+      background: var(--tile);
+      box-shadow: var(--tile-shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      user-select: none;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    .tile:hover {
+      transform: translateY(-1px);
+    }
+
+    .tile.revealed {
+      background: #dff9e7;
+    }
+
+    .tile.matched {
+      background: var(--matched-bg);
+      color: #000;
+      cursor: default;
+      box-shadow: none;
+    }
+
+    .tile.locked {
+      cursor: default;
+    }
+
+    .message {
+      margin: 16px 0 0;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 700;
+      color: #1f2937;
+      min-height: 24px;
+    }
+
+    .message.win {
+      color: #166534;
+    }
+
+    @media (max-width: 420px) {
+      .app {
+        padding: 18px 14px 14px;
+      }
+
+      .title {
+        font-size: 26px;
+      }
+
+      .subtitle {
+        font-size: 14px;
+      }
+
+      .tile {
+        font-size: 26px;
+        border-radius: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <h1 class="title">간단한 퍼즐 게임</h1>
+    <p class="subtitle">같은 그림 2개를 찾아 모두 맞추면 클리어입니다.</p>
+
+    <div class="topbar">
+      <div class="counter">시도 횟수: <span id="moves">0</span></div>
+      <button class="restart" id="restartButton">다시 시작</button>
+    </div>
+
+    <section class="board" id="board" aria-label="퍼즐 보드"></section>
+    <p class="message" id="message"></p>
+  </main>
+
+  <script>
+    const emojis = ["🍇", "🍓", "🥝", "🍑", "🍉", "🍒", "🍊", "🍋"];
+    const board = document.getElementById("board");
+    const movesEl = document.getElementById("moves");
+    const messageEl = document.getElementById("message");
+    const restartButton = document.getElementById("restartButton");
+
+    // 지금까지 사용자가 선택한 첫 번째/두 번째 카드입니다.
+    let firstTile = null;
+    let secondTile = null;
+    // 카드 두 장을 비교하는 동안에는 추가 클릭을 막습니다.
+    let locked = false;
+    // 사용자가 몇 번 시도했는지 기록합니다.
+    let moves = 0;
+    // 맞춘 짝의 개수를 기록합니다.
+    let matchedCount = 0;
+    // 화면에 그려진 카드 DOM 목록입니다.
+    let tiles = [];
+    // 틀린 카드 2장을 다시 숨길 때 사용하는 타이머입니다.
+    let mismatchTimer = null;
+
+    // 배열을 무작위 순서로 섞는 함수입니다.
+    function shuffle(array) {
+      const copy = [...array];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    // 화면 아래 메시지를 보여주고, 성공 메시지일 때는 색을 바꿉니다.
+    function updateMessage(text, isWin = false) {
+      messageEl.textContent = text;
+      messageEl.classList.toggle("win", isWin);
+    }
+
+    // 시도 횟수 표시를 갱신합니다.
+    function updateMoves() {
+      movesEl.textContent = String(moves);
+    }
+
+    // 카드 선택 상태를 초기화합니다.
+    function resetSelection() {
+      firstTile = null;
+      secondTile = null;
+      locked = false;
+    }
+
+    // 두 카드가 같은 그림일 때, 맞춘 카드로 표시합니다.
+    function markMatched(tileA, tileB) {
+      tileA.classList.add("matched");
+      tileB.classList.add("matched");
+      tileA.classList.add("locked");
+      tileB.classList.add("locked");
+      tileA.removeAttribute("aria-pressed");
+      tileB.removeAttribute("aria-pressed");
+    }
+
+    // 모든 카드 짝을 맞췄는지 확인합니다.
+    function checkWin() {
+      if (matchedCount === emojis.length) {
+        updateMessage(`축하합니다! ${moves}번 만에 모두 맞췄습니다.`, true);
+      }
+    }
+
+    // 카드 하나를 클릭했을 때 실행되는 함수입니다.
+    function handleTileClick(event) {
+      const tile = event.currentTarget;
+
+      // 이미 비교 중이거나, 이미 맞춘 카드이거나, 같은 카드를 다시 누르면 무시합니다.
+      if (locked || tile.classList.contains("matched") || tile === firstTile) {
+        return;
+      }
+
+      // 카드를 뒤집어서 그림을 보여줍니다.
+      tile.classList.add("revealed");
+      tile.textContent = tile.dataset.emoji;
+      tile.setAttribute("aria-pressed", "true");
+
+      // 첫 번째 카드라면 저장만 하고 다음 클릭을 기다립니다.
+      if (!firstTile) {
+        firstTile = tile;
+        return;
+      }
+
+      // 두 번째 카드를 클릭하면 둘을 비교합니다.
+      secondTile = tile;
+      locked = true;
+      moves += 1;
+      updateMoves();
+
+      // 두 카드의 그림이 같은지 비교합니다.
+      const isMatch = firstTile.dataset.emoji === secondTile.dataset.emoji;
+
+      if (isMatch) {
+        // 같으면 맞춘 카드로 고정합니다.
+        markMatched(firstTile, secondTile);
+        matchedCount += 1;
+        updateMessage("정답입니다!");
+        resetSelection();
+        checkWin();
+        return;
+      }
+
+      // 다르면 잠시 보여준 뒤 다시 숨깁니다.
+      updateMessage("다시 시도해 보세요.");
+      if (mismatchTimer) {
+        clearTimeout(mismatchTimer);
+      }
+
+      mismatchTimer = setTimeout(() => {
+        firstTile.classList.remove("revealed");
+        secondTile.classList.remove("revealed");
+        firstTile.textContent = "";
+        secondTile.textContent = "";
+        firstTile.removeAttribute("aria-pressed");
+        secondTile.removeAttribute("aria-pressed");
+        mismatchTimer = null;
+        resetSelection();
+      }, 650);
+    }
+
+    // 카드 1장을 DOM 버튼으로 만들어 반환합니다.
+    function createTile(emoji) {
+      // 버튼 요소를 하나 생성합니다.
+      const tile = document.createElement("button");
+      // 버튼이 기본 submit 동작을 하지 않도록 설정합니다.
+      tile.type = "button";
+      // CSS에서 사용할 클래스 이름을 붙입니다.
+      tile.className = "tile";
+      // 이 카드가 어떤 이모지인지 data 속성에 저장합니다.
+      tile.dataset.emoji = emoji;
+      // 처음에는 카드 앞면을 비워 둡니다.
+      tile.textContent = "";
+      // 스크린 리더가 읽을 수 있도록 설명을 넣습니다.
+      tile.setAttribute("aria-label", "퍼즐 타일");
+      // 클릭하면 카드 뒤집기 로직이 실행되도록 연결합니다.
+      tile.addEventListener("click", handleTileClick);
+      // 완성된 카드 버튼을 돌려줍니다.
+      return tile;
+    }
+
+    // 게임을 처음 상태로 다시 시작합니다.
+    function startGame() {
+      // 기존 보드를 지우고, 남아 있는 타이머도 정리합니다.
+      board.innerHTML = "";
+      if (mismatchTimer) {
+        clearTimeout(mismatchTimer);
+        mismatchTimer = null;
+      }
+      firstTile = null;
+      secondTile = null;
+      locked = false;
+      moves = 0;
+      matchedCount = 0;
+
+      updateMoves();
+      updateMessage("");
+
+      // 8개의 이모지를 2장씩 넣어서 총 16장의 카드를 만든 뒤 섞습니다.
+      const deck = shuffle([...emojis, ...emojis]);
+      tiles = deck.map(createTile);
+      tiles.forEach((tile) => board.appendChild(tile));
+    }
+
+    restartButton.addEventListener("click", startGame);
+    startGame();
+  </script>
+</body>
+</html>
